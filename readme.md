@@ -34,7 +34,7 @@
 
 
 ## 🔥 Updates
-- **`2024/07/04`**: 🔥 We released the initial version of the inference code and models.
+- **`2024/07/04`**: 🔥 We released the initial version of the inference code and models. Continuous updates, stay tuned!
 - **`2024/07/04`**: 😊 We released the [homepage](https://liveportrait.github.io) and technical report on [arXiv](https://arxiv.org/pdf/2407.03168).
 
 ## Introduction
@@ -46,9 +46,6 @@ We are actively updating and improving this repository. If you find any bugs or 
 ```bash
 git clone https://github.com/KwaiVGI/LivePortrait
 cd LivePortrait
-# using lfs to pull the data
-git lfs install
-git lfs pull
 
 # create env using conda
 conda create -n LivePortrait python==3.9.18
