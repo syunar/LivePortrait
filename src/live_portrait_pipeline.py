@@ -54,8 +54,24 @@ class LivePortraitPipeline(object):
         x_s_info = self.live_portrait_wrapper.get_kp_info(I_s)
         x_c_s = x_s_info['kp']
         R_s = get_rotation_matrix(x_s_info['pitch'], x_s_info['yaw'], x_s_info['roll'])
-        f_s = self.live_portrait_wrapper.extract_feature_3d(I_s)
+        f_s = self.live_portrait_wrapper.extract_feature_3d(I_s) # torch.Size([1, 32, 16, 64, 64])
         x_s = self.live_portrait_wrapper.transform_keypoint(x_s_info)
+
+        img_rgb_s7 = load_image_rgb("/home/fronk-wsl/dev/LivePortrait/assets/examples/source/s10.jpg")
+        img_rgb_s7 = resize_to_limit(img_rgb_s7, inference_cfg.ref_max_shape, inference_cfg.ref_shape_n)
+        crop_info_s7 = self.cropper.crop_single_image(img_rgb_s7)
+        img_crop, img_crop_256x256_s7 = crop_info_s7['img_crop'], crop_info_s7['img_crop_256x256']
+        I_s_s7 = self.live_portrait_wrapper.prepare_source(img_crop_256x256_s7)
+        f_s_s7 = self.live_portrait_wrapper.extract_feature_3d(I_s_s7)
+        import torch
+        # torch.save(f_s_s7, "f_s_s7.pth")
+        # log(f"Save f_s_s7.pth")
+
+        # f_s_ = torch.load("/home/fronk-wsl/dev/LivePortrait/f_s_s7.pth").cuda()
+        # THESHOLD = 0.8
+        # f_s = (1-THESHOLD) * f_s + THESHOLD * f_s_s7
+
+        f_s[:, 16:] = f_s_s7[:, 16:]
 
         if inference_cfg.flag_lip_zero:
             # let lip-open scalar to be 0 at first
@@ -180,10 +196,15 @@ class LivePortraitPipeline(object):
         mkdir(args.output_dir)
         wfp_concat = None
         if is_video(args.driving_info):
-            frames_concatenated = concat_frames(I_p_lst, driving_rgb_lst, img_crop_256x256)
-            # save (driving frames, source image, drived frames) result
             wfp_concat = osp.join(args.output_dir, f'{basename(args.source_image)}--{basename(args.driving_info)}_concat.mp4')
-            images2video(frames_concatenated, wfp=wfp_concat)
+
+            if inference_cfg.flag_pasteback:
+                frames_concatenated = concat_frames(I_p_paste_lst, driving_rgb_lst, img_crop_256x256)
+                images2video(frames_concatenated, wfp=wfp_concat)
+            else:
+                frames_concatenated = concat_frames(I_p_lst, driving_rgb_lst, img_crop_256x256)
+                # save (driving frames, source image, drived frames) result
+                images2video(frames_concatenated, wfp=wfp_concat)
 
         # save drived result
         wfp = osp.join(args.output_dir, f'{basename(args.source_image)}--{basename(args.driving_info)}.mp4')

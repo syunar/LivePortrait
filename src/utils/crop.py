@@ -390,4 +390,3 @@ def average_bbox_lst(bbox_lst):
         return None
     bbox_arr = np.array(bbox_lst)
     return np.mean(bbox_arr, axis=0).tolist()
-
